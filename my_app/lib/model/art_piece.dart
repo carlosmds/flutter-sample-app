@@ -3,19 +3,15 @@ class ArtPiece {
   final int id;
   final Map data;
 
-  bool liked = false;
-
   ArtPiece(
       {required this.id,
       required this.title,
       required this.image,
       required this.description,
-      required this.liked,
       required this.data});
 
-  void toggleLiked() {
-    liked = !liked;
-  }
+  @override
+  bool operator ==(Object other) => other is ArtPiece && id == other.id;
 
   // maybe someday??
   // factory ArtPiece.fromJson(Map<String, dynamic> json) {
@@ -23,7 +19,6 @@ class ArtPiece {
   //       title: json['title'],
   //       image: json['primaryImage'],
   //       description: json['objectName'],
-  //       liked: false,
   //       data: json);
   // }
 }

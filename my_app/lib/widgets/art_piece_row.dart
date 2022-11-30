@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../model/art_piece.dart';
 
-class ArtItemRow {
+class ArtPieceRow {
   static const _biggerFont =
       TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
   static const _artImageBoxMinSize = 44.0;
   static const _artImageBoxMaxSize = 64.0;
 
   static ListTile buildRow(
-      ArtPiece artPiece, VoidCallback onTap, VoidCallback onLike) {
+      ArtPiece artPiece, bool liked, VoidCallback onTap, VoidCallback onLike) {
     return ListTile(
       title: Text(
         artPiece.title,
@@ -26,12 +26,13 @@ class ArtItemRow {
         child: Image.network(
           artPiece.image,
           fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
         ),
       ),
       trailing: IconButton(
         icon: Icon(
-          artPiece.liked ? Icons.favorite : Icons.favorite_border,
-          color: artPiece.liked ? Colors.red : null,
+          liked ? Icons.favorite : Icons.favorite_border,
+          color: liked ? Colors.red : null,
         ),
         onPressed: onLike,
       ),

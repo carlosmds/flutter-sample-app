@@ -12,9 +12,9 @@ https://docs.flutter.dev/get-started/install/macos
 `flutter run`
 
 ### Next steps...
-https://www.youtube.com/watch?v=ZHdg2kfKmjI&ab_channel=JohannesMilke
-https://github.com/JohannesMilke/search_filter_listview
-https://karthikponnam.medium.com/flutter-search-in-listview-1ffa40956685
+https://www.youtube.com/watch?v=iKxrt4ASR5Y&ab_channel=CodeX
+https://stackoverflow.com/questions/71438000/flutter-reminder-app-alarm-notification-return-value
+https://andrious.medium.com/notification-alarms-in-flutter-25e3ee3c336e
 
 ### Miro model
 ![Alt text](miro-model.jpeg "Title")
