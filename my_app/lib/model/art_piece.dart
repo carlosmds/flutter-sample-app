@@ -1,6 +1,22 @@
+import 'package:hive/hive.dart';
+
+part 'art_piece.g.dart';
+
+@HiveType(typeId: 0)
 class ArtPiece {
-  final String title, image, description;
+  @HiveField(0)
+  final String title;
+
+  @HiveField(1)
+  final String image;
+
+  @HiveField(2)
+  final String description;
+
+  @HiveField(3)
   final int id;
+
+  @HiveField(4)
   final Map data;
 
   ArtPiece(
@@ -12,13 +28,4 @@ class ArtPiece {
 
   @override
   bool operator ==(Object other) => other is ArtPiece && id == other.id;
-
-  // maybe someday??
-  // factory ArtPiece.fromJson(Map<String, dynamic> json) {
-  //   return ArtPiece(
-  //       title: json['title'],
-  //       image: json['primaryImage'],
-  //       description: json['objectName'],
-  //       data: json);
-  // }
 }
