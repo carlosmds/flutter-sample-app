@@ -16,15 +16,12 @@ class ArtPiece {
   @HiveField(3)
   final int id;
 
-  @HiveField(4)
-  final Map data;
-
-  ArtPiece(
-      {required this.id,
-      required this.title,
-      required this.image,
-      required this.description,
-      required this.data});
+  ArtPiece({
+    required this.id,
+    required this.title,
+    required this.image,
+    required this.description,
+  });
 
   @override
   bool operator ==(Object other) => other is ArtPiece && id == other.id;

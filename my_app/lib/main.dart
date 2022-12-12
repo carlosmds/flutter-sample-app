@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_app/widgets/daily_art.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
 }
 

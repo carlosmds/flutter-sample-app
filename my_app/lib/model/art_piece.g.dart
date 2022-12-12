@@ -21,14 +21,13 @@ class ArtPieceAdapter extends TypeAdapter<ArtPiece> {
       title: fields[0] as String,
       image: fields[1] as String,
       description: fields[2] as String,
-      data: (fields[4] as Map).cast<dynamic, dynamic>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, ArtPiece obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -36,9 +35,7 @@ class ArtPieceAdapter extends TypeAdapter<ArtPiece> {
       ..writeByte(2)
       ..write(obj.description)
       ..writeByte(3)
-      ..write(obj.id)
-      ..writeByte(4)
-      ..write(obj.data);
+      ..write(obj.id);
   }
 
   @override

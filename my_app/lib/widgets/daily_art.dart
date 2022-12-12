@@ -18,6 +18,7 @@ class DailyArt extends StatefulWidget {
 
 class _DailyArtState extends State<DailyArt> {
   String _query = "Leonardo da Vinci";
+  String _latest_query = "";
   String _user = "Artsy User";
   dynamic notificationOptions = {
     "minutely": {"cron": "0 * * * *", "selected": false},
@@ -26,6 +27,7 @@ class _DailyArtState extends State<DailyArt> {
     "weekly": {"cron": "0 0 * * 0", "selected": false},
     "never": {"cron": null, "selected": true},
   };
+  List<ArtPiece> _latest_arts = <ArtPiece>[];
   final _liked = <ArtPiece>[];
   final searchController = TextEditingController();
   final usernameController = TextEditingController();
@@ -36,10 +38,12 @@ class _DailyArtState extends State<DailyArt> {
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(ArtPieceAdapter());
     Hive.init("${directory.path}/storage");
     final likedBox = await Hive.openBox('liked');
-    likedBox.clear();
+    await likedBox.clear();
     for (var artPiece in _liked) {
-      likedBox.add(artPiece);
+      print(artPiece.title);
+      await likedBox.add(artPiece);
     }
+    await likedBox.close();
     return;
   }
 
@@ -48,8 +52,9 @@ class _DailyArtState extends State<DailyArt> {
     final directory = await getApplicationDocumentsDirectory();
     Hive.init("${directory.path}/storage");
     final userBox = await Hive.openBox('user');
-    userBox.clear();
-    userBox.add(_user);
+    await userBox.clear();
+    await userBox.add(_user);
+    await userBox.close();
     return;
   }
 
@@ -58,8 +63,9 @@ class _DailyArtState extends State<DailyArt> {
     final directory = await getApplicationDocumentsDirectory();
     Hive.init("${directory.path}/storage");
     final notificationOptionsBox = await Hive.openBox('notificationOptions');
-    notificationOptionsBox.clear();
-    notificationOptionsBox.add(notificationOptions);
+    await notificationOptionsBox.clear();
+    await notificationOptionsBox.add(notificationOptions);
+    await notificationOptionsBox.close();
     return;
   }
 
@@ -69,120 +75,126 @@ class _DailyArtState extends State<DailyArt> {
     if (!Hive.isAdapterRegistered(0)) Hive.registerAdapter(ArtPieceAdapter());
     Hive.init("${directory.path}/storage");
     final userBox = await Hive.openBox('user');
-    final likedBox = await Hive.openBox('liked');
     final notificationOptionsBox = await Hive.openBox('notificationOptions');
     if (userBox.isNotEmpty) {
-      _user = userBox.getAt(0);
+      _user = await userBox.getAt(0);
     }
+    await userBox.close();
+    final likedBox = await Hive.openBox('liked');
     if (likedBox.isNotEmpty) {
       for (var artPiece in likedBox.values) {
-        _liked.add(artPiece);
+        // check if _liked contains artpiece, if not add it
+        if (!_liked.contains(artPiece)) _liked.add(artPiece);
       }
     }
+    await likedBox.close();
     if (notificationOptionsBox.isNotEmpty) {
-      notificationOptions = notificationOptionsBox.getAt(0);
+      notificationOptions = await notificationOptionsBox.getAt(0);
     }
+    await notificationOptionsBox.close();
     return;
   }
 
   void _pushSettings() {
+    usernameController.text = _user;
     Navigator.of(context)
         .push(MaterialPageRoute<void>(builder: (BuildContext context) {
       return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Settings'),
-          ),
-          body: Column(
-            children: [
-              Container(
-                alignment: Alignment.center,
-                margin: const EdgeInsets.all(64),
-                child: const CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage('https://picsum.photos/400'),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(16),
-                // align text field in center
-                child: TextField(
-                  onChanged: (value) => setState(() {
-                    _user = value;
-                    _updateUser();
-                  }),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            appBar: AppBar(
+              title: const Text('Settings'),
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    alignment: Alignment.center,
+                    margin: const EdgeInsets.all(64),
+                    child: const CircleAvatar(
+                      radius: 50,
+                      backgroundImage:
+                          NetworkImage('https://picsum.photos/400'),
+                    ),
                   ),
-                  controller: usernameController..text = _user,
-                  decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.person),
-                      suffixIcon: Icon(Icons.edit),
-                      border: OutlineInputBorder(),
-                      labelText: 'Username'),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.all(16),
-                child: Text(
-                  'Notification Frequency',
-                  style: Theme.of(context).textTheme.headline6,
-                ),
-              ),
-              // display the notification options in separate buttons that keeps selection when pressed
-              // the buttons are displayed one in top of the other with the same size
-              // when a button is pressed the 'selected' property of the corresponding option is set to true
-              // and the 'selected' property of the other options is set to false
-              // the 'selected' property is used to display the button with a different color and visible text
-              // the 'never' option is selected by default
-
-              Container(
-                margin: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    for (var option in notificationOptions.entries)
-                      Container(
-                        margin: const EdgeInsets.all(8),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                for (var otherOption
-                                    in notificationOptions.entries) {
-                                  if (otherOption.key == option.key) {
-                                    otherOption.value["selected"] = true;
-                                  } else {
-                                    otherOption.value["selected"] = false;
-                                  }
-                                }
-                                _updateNotificationOptions();
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: option.value["selected"]
-                                  ? Colors.blue
-                                  : Colors.white,
-                              foregroundColor: option.value["selected"]
-                                  ? Colors.white
-                                  : Colors.black,
-                              side: option.value["selected"]
-                                  ? null
-                                  : const BorderSide(
-                                      color: Colors.grey, width: 1),
-                            ),
-                            child: Text(option.key),
-                          ),
-                        ),
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    // align text field in center
+                    child: TextField(
+                      onChanged: (value) => setState(() {
+                        _user = value;
+                        _updateUser();
+                      }),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        );
+                      controller: usernameController,
+                      decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.person),
+                          suffixIcon: Icon(Icons.edit),
+                          border: OutlineInputBorder(),
+                          labelText: 'Username'),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    child: Text(
+                      'Notification Frequency',
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                  ),
+                  // display the notification options in separate buttons that keeps selection when pressed
+                  // the buttons are displayed one in top of the other with the same size
+                  // when a button is pressed the 'selected' property of the corresponding option is set to true
+                  // and the 'selected' property of the other options is set to false
+                  // the 'selected' property is used to display the button with a different color and visible text
+                  // the 'never' option is selected by default
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        for (var option in notificationOptions.entries)
+                          Container(
+                            margin: const EdgeInsets.all(8),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    for (var otherOption
+                                        in notificationOptions.entries) {
+                                      if (otherOption.key == option.key) {
+                                        otherOption.value["selected"] = true;
+                                      } else {
+                                        otherOption.value["selected"] = false;
+                                      }
+                                    }
+                                    _updateNotificationOptions();
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: option.value["selected"]
+                                      ? Colors.blue
+                                      : Colors.white,
+                                  foregroundColor: option.value["selected"]
+                                      ? Colors.white
+                                      : Colors.black,
+                                  side: option.value["selected"]
+                                      ? null
+                                      : const BorderSide(
+                                          color: Colors.grey, width: 1),
+                                ),
+                                child: Text(option.key),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ));
       });
     }));
   }
@@ -202,8 +214,14 @@ class _DailyArtState extends State<DailyArt> {
                 errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.error),
               ),
-              Text(artPiece.title),
-              Text(artPiece.description),
+              Text(
+                artPiece.description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -211,11 +229,15 @@ class _DailyArtState extends State<DailyArt> {
     ));
   }
 
-  void _likeArtPiece(ArtPiece artPiece, StateSetter setState) async {
+  void _likeArtPiece(ArtPiece artPiece, StateSetter setState) {
     setState(() {
       if (_liked.contains(artPiece)) {
+        print('removing');
+        print(artPiece);
         _liked.remove(artPiece);
       } else {
+        print('adding');
+        print(artPiece);
         _liked.add(artPiece);
       }
       _updateLiked();
@@ -255,12 +277,18 @@ class _DailyArtState extends State<DailyArt> {
   }
 
   Future startApp() async {
-    await _retrieveInitialData();
+    if (_liked.isEmpty) await _retrieveInitialData();
     return getArtPiecesData(_query);
   }
 
   Future getArtPiecesData(String query) async {
-    List<ArtPiece> artPieces = [];
+    var artPieces = <ArtPiece>[];
+
+    if (_query == _latest_query) {
+      return _latest_arts;
+    }
+
+    _latest_query = query;
 
     var limit = 12;
     var count = 0;
@@ -290,8 +318,11 @@ class _DailyArtState extends State<DailyArt> {
           id: artPieceData['objectID'],
           title: artPieceData['title'],
           image: artPieceData['primaryImage'],
-          description: artPieceData['objectName'],
-          data: artPieceData);
+          description: artPieceData['artistDisplayName'] +
+              ".\n" +
+              artPieceData['artistDisplayBio'] +
+              ".\n" +
+              artPieceData['repository']);
 
       artPieces.add(artPiece);
 
@@ -301,6 +332,7 @@ class _DailyArtState extends State<DailyArt> {
         break;
       }
     }
+    _latest_arts = artPieces;
     return artPieces;
   }
 
@@ -333,7 +365,7 @@ class _DailyArtState extends State<DailyArt> {
                   borderSide: const BorderSide(color: Colors.black),
                   borderRadius: BorderRadius.circular(2.0)),
             ),
-            onChanged: (value) {
+            onSubmitted: (value) {
               setState(() {
                 _query = value;
               });
@@ -343,7 +375,7 @@ class _DailyArtState extends State<DailyArt> {
               child: FutureBuilder(
                   future: startApp(),
                   builder: (context, snapshot) {
-                    if (snapshot.data == null) {
+                    if (snapshot.connectionState != ConnectionState.done) {
                       return const Center(
                         child: Text('Loading...'),
                       );

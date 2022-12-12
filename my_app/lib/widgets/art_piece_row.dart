@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import '../model/art_piece.dart';
 
 class ArtPieceRow {
@@ -23,10 +23,12 @@ class ArtPieceRow {
           maxWidth: _artImageBoxMaxSize,
           maxHeight: _artImageBoxMaxSize,
         ),
-        child: Image.network(
-          artPiece.image,
+        child: CachedNetworkImage(
+          imageUrl: artPiece.image,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => const Icon(Icons.error),
+          progressIndicatorBuilder: (context, url, downloadProgress) =>
+              CircularProgressIndicator(value: downloadProgress.progress),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
         ),
       ),
       trailing: IconButton(
