@@ -121,7 +121,7 @@ class _DailyArtState extends State<DailyArt> {
                     margin: const EdgeInsets.all(16),
                     // align text field in center
                     child: TextField(
-                      onChanged: (value) => setState(() {
+                      onSubmitted: (value) => setState(() {
                         _user = value;
                         _updateUser();
                       }),
